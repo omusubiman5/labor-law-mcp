@@ -1,11 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createServer } from '../src/server.js';
 
-export const config = {
-  runtime: 'edge',
-};
-
-const cors = {
+const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, mcp-session-id, Last-Event-ID, mcp-protocol-version',
@@ -14,13 +10,27 @@ const cors = {
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: cors });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
-  const transport = new WebStandardStreamableHTTPServerTransport();
-  const server = createServer();
-  await server.connect(transport);
-  const res = await transport.handleRequest(req);
-  const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(cors)) headers.set(k, v);
-  return new Response(res.body, { status: res.status, headers });
+  try {
+    const transport = new WebStandardStreamableHTTPServerTransport();
+    const server = createServer();
+    await server.connect(transport);
+    const response = await transport.handleRequest(req);
+    const newHeaders = new Headers(response.headers);
+    for (const [k, v] of Object.entries(corsHeaders)) newHeaders.set(k, v);
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    });
+  } catch (error) {
+    console.error('MCP handler error:', error);
+    return new Response(JSON.stringify({ error: String(error) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
 }
+
+export const config = { runtime: 'edge' };
