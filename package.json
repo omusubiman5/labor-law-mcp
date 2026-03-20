@@ -1,7 +1,7 @@
 {
   "name": "labor-law-mcp",
-  "version": "0.2.0",
-  "description": "MCP server for Japanese labor & social insurance law — e-Gov API, MHLW 通達, JAISH 安衛通達",
+  "version": "0.3.0",
+  "description": "MCP server for Japanese labor & social insurance law — e-Gov API, MHLW 通達, JAISH 安衛通達, ハラスメント裁判例, 裁判所判例検索, 労働保険審査会裁決, 全基連判例",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -31,7 +31,11 @@
     "e-gov",
     "mhlw",
     "sharoushi",
-    "claude"
+    "claude",
+    "harassment",
+    "court-cases",
+    "rousai",
+    "zenkiren"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
@@ -39,7 +43,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@vercel/node": "^5.6.15",
+    "@vercel/node": "^5.6.18",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"
