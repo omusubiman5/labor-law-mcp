@@ -5,16 +5,22 @@ import { registerSearchMhlwTsutatsuTool } from './tools/search-mhlw-tsutatsu.js'
 import { registerGetMhlwTsutatsuTool } from './tools/get-mhlw-tsutatsu.js';
 import { registerSearchJaishTsutatsuTool } from './tools/search-jaish-tsutatsu.js';
 import { registerGetJaishTsutatsuTool } from './tools/get-jaish-tsutatsu.js';
+import { registerSearchHarassmentCasesTool } from './tools/search-harassment-cases.js';
+import { registerGetHarassmentCaseTool } from './tools/get-harassment-case.js';
+import { registerSearchCourtCasesTool } from './tools/search-court-cases.js';
+import { registerSearchShinsakaiDecisionsTool } from './tools/search-shinsakai-decisions.js';
+import { registerSearchZenkirenCasesTool } from './tools/search-zenkiren-cases.js';
+import { registerGetZenkirenCaseTool } from './tools/get-zenkiren-case.js';
 import { registerPrompts } from './prompts/index.js';
 
 export function createServer(): McpServer {
   const server = new McpServer(
     {
       name: 'labor-law-mcp',
-      version: '0.2.0',
+      version: '0.3.0',
     },
     {
-      instructions: `日本の労働・社会保険法令と行政通達の原文を取得するMCPサーバーです。
+      instructions: `日本の労働・社会保険法令、行政通達、判例・裁判例を取得するMCPサーバーです。
 
 ## 絶対ルール
 - 条文・通達の内容に言及するときは、必ず本サーバーのツールで原文を取得すること
@@ -30,11 +36,12 @@ export function createServer(): McpServer {
    - 知識から関連しそうな法令・条文・通達を特定する
    - 調査計画を箇条書きで出力する
 
-2. **条文・通達を並行取得する（ラウンド1）**
+2. **条文・通達・判例を並行取得する（ラウンド1）**
    以下を並行して実行する:
    a. 仮説で特定した法令名・条文番号で get_law / search_mhlw_tsutatsu / search_jaish_tsutatsu 等を呼び出し原文を取得する
-   b. WebSearchで関連する通達・判例の番号や名称を検索する
-   c. WebSearchで新たに特定した法令は search_law で実在を確認し、get_law で原文を取得する
+   b. 判例が関連する場合は search_harassment_cases / search_court_cases / search_zenkiren_cases で判例を検索する
+   c. WebSearchで関連する通達・判例の番号や名称を検索する
+   d. WebSearchで新たに特定した法令は search_law で実在を確認し、get_law で原文を取得する
    ※ search_law は精度が低いため、法令の発見にはWebSearchを優先せよ
    ※ WebSearchの結果を鵜呑みにせず、必ず本サーバーのツールで原文を取得すること
 
@@ -42,6 +49,7 @@ export function createServer(): McpServer {
    以下を1つずつ確認し、結果を箇条書きで出力せよ。未達の項目があれば追加取得してから再チェックせよ。
    - [ ] 結論を支える条文を最低1つ取得し引用しているか
    - [ ] 関連する通達も確認したか（厚労省通達・安衛通達の両方を検討すること）
+   - [ ] 判例・裁判例が関連する場合、判例検索ツールで確認したか
    - [ ] ツール呼び出しの失敗を放置していないか
    - [ ] 条文中の「政令で定める」「厚生労働省令で定める」等の委任先も確認したか
    たとえ1ラウンド目で結論が出せると感じても、上記チェックをすべて満たすまでサイクルを止めるな。
@@ -52,9 +60,24 @@ export function createServer(): McpServer {
 5. **結論を回答する**
    条文・通達に基づく結論を述べる。取得した原文を「」で囲んでそのまま引用し、出典URLを明記すること。
 
+## 利用可能なツール一覧
+
+### 法令ツール
+- get_law: e-Gov APIから法令の条文を取得
+- search_law: e-Gov APIで法令をキーワード検索
+
+### 通達ツール
+- search_mhlw_tsutatsu / get_mhlw_tsutatsu: 厚労省法令等データベースから通達を検索・取得
+- search_jaish_tsutatsu / get_jaish_tsutatsu: 安全衛生情報センターから安衛通達を検索・取得
+
+### 判例ツール
+- search_harassment_cases / get_harassment_case: あかるい職場応援団のハラスメント裁判例を検索・取得
+- search_court_cases: 裁判所の判例データベースを検索（メタデータ+PDF URL）
+- search_shinsakai_decisions: 労働保険審査会の裁決事案を検索（カテゴリ別・年度別）
+- search_zenkiren_cases / get_zenkiren_case: 全基連の主要労働判例を検索・取得（curated subset）
+
 ## 本サーバーで取得できないデータ
 - 告示・指針（例: パワハラ防止指針、セクハラ指針等の厚生労働省告示）は本サーバーでは取得できない場合がある
-- 判例・裁判例も本サーバーの対象外である
 - これらはWebSearch / WebFetch で補完すること。ただし下記「一次情報と二次情報の区別」ルールに従うこと
 
 ## 一次情報と二次情報の区別
@@ -92,6 +115,20 @@ export function createServer(): McpServer {
   // JAISH安衛通達ツール（安全衛生情報センター）
   registerSearchJaishTsutatsuTool(server);  // search_jaish_tsutatsu: 安衛通達検索
   registerGetJaishTsutatsuTool(server);     // get_jaish_tsutatsu: 安衛通達本文取得
+
+  // ハラスメント裁判例ツール（あかるい職場応援団）
+  registerSearchHarassmentCasesTool(server);  // search_harassment_cases: 裁判例検索
+  registerGetHarassmentCaseTool(server);      // get_harassment_case: 裁判例詳細取得
+
+  // 裁判所判例検索ツール（courts.go.jp）
+  registerSearchCourtCasesTool(server);  // search_court_cases: 判例検索
+
+  // 労働保険審査会裁決ツール（厚労省）
+  registerSearchShinsakaiDecisionsTool(server);  // search_shinsakai_decisions: 裁決検索
+
+  // 全基連判例ツール（zenkiren.com）
+  registerSearchZenkirenCasesTool(server);  // search_zenkiren_cases: 判例検索
+  registerGetZenkirenCaseTool(server);      // get_zenkiren_case: 判例詳細取得
 
   // プロンプトテンプレート
   registerPrompts(server);

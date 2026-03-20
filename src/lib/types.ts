@@ -65,6 +65,82 @@ export interface MhlwDocument {
   url: string;
 }
 
+/** ハラスメント裁判例 — 一覧エントリ */
+
+export interface HarassmentCaseEntry {
+  /** 裁判例タイトル */
+  title: string;
+  /** ページパス（例: "/foundation/judicail-precedent/xxx"） */
+  path: string;
+}
+
+/** ハラスメント裁判例 — 詳細 */
+
+export interface HarassmentCaseDetail {
+  /** 裁判例タイトル */
+  title: string;
+  /** 本文（概要・判決ポイント・コメント） */
+  body: string;
+}
+
+/** 裁判所判例検索 — 検索結果エントリ */
+
+export interface CourtCaseEntry {
+  /** 事件名 */
+  caseName: string;
+  /** 裁判所名 */
+  courtName: string;
+  /** 裁判年月日 */
+  date: string;
+  /** 事件番号 */
+  caseNumber: string;
+  /** 判例詳細ページURL */
+  detailUrl: string;
+  /** 全文PDF URL（存在する場合） */
+  pdfUrl?: string;
+}
+
+/** 労働保険審査会裁決 — 検索結果エントリ */
+
+export interface ShinsakaiDecisionEntry {
+  /** 裁決タイトル */
+  title: string;
+  /** PDF URL */
+  pdfUrl: string;
+  /** カテゴリ */
+  category: string;
+  /** 年度 */
+  fiscalYear: string;
+}
+
+/** 全基連判例 — レジストリエントリ */
+
+export interface ZenkirenCaseEntry {
+  /** 事件名 */
+  caseName: string;
+  /** 裁判所名 */
+  courtName: string;
+  /** 裁判年月日 */
+  date: string;
+  /** 概要 */
+  summary: string;
+  /** 詳細ページURL */
+  url: string;
+  /** キーワード（検索用） */
+  keywords: string[];
+}
+
+/** 全基連判例 — 詳細 */
+
+export interface ZenkirenCaseDetail {
+  /** 事件名 */
+  caseName: string;
+  /** 本文テキスト */
+  body: string;
+  /** ソースURL */
+  url: string;
+}
+
 /** JAISH 安全衛生情報センター — インデックスエントリ */
 
 export interface JaishIndexEntry {

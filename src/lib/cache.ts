@@ -59,6 +59,21 @@ export const mhlwSearchCache = new TTLCache<string>(30 * 60 * 1000);
 /** MHLW 通達ページキャッシュ: TTL 1時間 */
 export const mhlwDocCache = new TTLCache<string>(60 * 60 * 1000);
 
+/** ハラスメント裁判例 一覧キャッシュ: TTL 24時間 */
+export const harassmentListCache = new TTLCache<string>(24 * 60 * 60 * 1000);
+
+/** ハラスメント裁判例 詳細キャッシュ: TTL 24時間 */
+export const harassmentDetailCache = new TTLCache<string>(24 * 60 * 60 * 1000);
+
+/** 裁判所判例検索キャッシュ: TTL 30分 */
+export const courtsSearchCache = new TTLCache<string>(30 * 60 * 1000);
+
+/** 労働保険審査会裁決キャッシュ: TTL 24時間 */
+export const shinsakaiCache = new TTLCache<string>(24 * 60 * 60 * 1000);
+
+/** 全基連 判例ページキャッシュ: TTL 24時間 */
+export const zenkirenPageCache = new TTLCache<string>(24 * 60 * 60 * 1000);
+
 /** JAISH インデックスキャッシュ: TTL 24時間 */
 export const jaishIndexCache = new TTLCache<string>(24 * 60 * 60 * 1000);
 
