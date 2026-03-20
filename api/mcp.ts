@@ -36,7 +36,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const server = createServer();
     await server.connect(transport);
 
-    await transport.handleRequest(req, res);
+    // Vercel pre-parses the request body, so the raw stream is empty.
+    // Pass the pre-parsed body as the third argument.
+    await transport.handleRequest(req, res, (req as any).body);
   } catch (error) {
     console.error('MCP handler error:', error);
     if (!res.headersSent) {
