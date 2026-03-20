@@ -38,7 +38,7 @@
     "zenkiren"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
