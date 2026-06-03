@@ -1,0 +1,18 @@
+{
+  "comment": "stdio 配布パッケージ (bin/dist) のビルド用。`npm run build:lib` / publish で使用。HTTP/Next.js 側は root の tsconfig.json を参照する。",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests", "api", "app", "lib"]
+}

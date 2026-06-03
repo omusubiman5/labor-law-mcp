@@ -148,10 +148,11 @@ npm run build
 
 #### セルフホスト（Vercel）＋ Claude.ai（Web）からリモート接続
 
-自分でサーバーを建てて、`https://` の MCP エンドポイントとして公開できます。MCP は Streamable HTTP トランスポートで動作し、Vercel Serverless Functions（`api/mcp.ts`）上にステートレスでデプロイされます。
+自分でサーバーを建てて、`https://` の MCP エンドポイントとして公開できます。MCP は Streamable HTTP トランスポートで動作し、Next.js（App Router）の Route Handler（`app/api/mcp/route.ts`）上にステートレスでデプロイされます。
 
 1. このリポジトリを Vercel に import（または `vercel` CLI でデプロイ）
-2. デプロイ後、Claude.ai の設定画面で自分のエンドポイント `https://<your-project>.vercel.app/mcp` を MCP サーバーとして登録
+2. **環境変数を設定**（`.env.example` 参照）。OAuth 認証が有効なため未設定だと接続できません。
+3. デプロイ後、Claude.ai の設定画面で自分のエンドポイント `https://<your-project>.vercel.app/mcp` を MCP サーバーとして登録
 
 > 末尾の `/mcp` を忘れないこと。`/` のみでは接続できません。
 
@@ -159,9 +160,18 @@ npm run build
 
 デプロイ時の注意点（リクエストボディの事前消費、`/mcp` パス、`/MCP` 大文字化対応など）は [docs/vercel-mcp-guide.md](docs/vercel-mcp-guide.md) を参照してください。
 
-> **⚠️ 認証について**: 現状の `api/mcp.ts` は **認証なし（CORS 全開）** です。URL を知っていれば誰でもツールを呼び出せます。検証用には問題ありませんが、**再利用・再デプロイして実運用・共有する場合は認証の追加が必須**です。
+> **🔐 認証について**: このエンドポイントは **OAuth 2.1（認可コード + PKCE）** で保護されています（`Authorization: Bearer` 必須、無認証アクセスは 401）。ID プロバイダは **Auth0**（Google Workspace 等を upstream IdP に federate する想定）で、`ALLOWED_EMAILS` に列挙したユーザーのみ認可されます。
 >
-> Claude.ai のリモート MCP（カスタムコネクタ）は **OAuth 2.1（認可コード + PKCE）** に対応しています。Google 等を ID プロバイダにした OAuth フローを実装し、エンドポイントへのアクセスを認可済みユーザーに限定してください。
+> **必要な環境変数**（Vercel の Project Settings → Environment Variables に設定。詳細は [`.env.example`](.env.example)）:
+>
+> | 変数 | 説明 |
+> |---|---|
+> | `SERVER_URL` | このサーバーの公開 URL（例: `https://<your-project>.vercel.app`） |
+> | `AUTH0_DOMAIN` / `AUTH0_CLIENT_ID` / `AUTH0_CLIENT_SECRET` | Auth0 テナント設定 |
+> | `OAUTH_SECRET` | 内部 JWT 署名鍵（`openssl rand -base64 32`） |
+> | `ALLOWED_EMAILS` | 認可するメールアドレス（カンマ区切り。空にすると全員許可） |
+>
+> 認証フローのエンドポイント: `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/oauth/authorize`, `/oauth/callback`, `/oauth/token`, `/oauth/register`（いずれも `app/` 配下、`lib/oauth.ts` が共通ロジック）。Auth0 側の Allowed Callback URL に `${SERVER_URL}/oauth/callback` を登録すること。
 
 ### MCP ツール
 
