@@ -141,24 +141,16 @@ AI は即断しません。まず、
 
 **Claude Code**: `claude mcp add labor-law -- npx -y labor-law-mcp`
 
-#### Claude.ai（Web）からリモート接続
-
-Claude.ai の設定画面で以下の URL を MCP サーバーとして登録:
-
-```
-https://labor-law-mcp.vercel.app/mcp
-```
-
-> 末尾の `/mcp` を忘れないこと。`/` のみでは接続できません。
-
-> **ツール使用許可**: Claude.ai で初めてツールが呼ばれると「このツールの実行を許可しますか？」というダイアログが表示されます。**「Allow」をクリック**しないとツールが実行されず、「No approval received」「Denied」エラーになります。「Always allow」を選択すると以降の確認が不要になります。
-
-#### セルフホスト（Vercel）
+#### セルフホスト（Vercel）＋ Claude.ai（Web）からリモート接続
 
 自分でサーバーを建てて、`https://` の MCP エンドポイントとして公開できます。MCP は Streamable HTTP トランスポートで動作し、Vercel Serverless Functions（`api/mcp.ts`）上にステートレスでデプロイされます。
 
 1. このリポジトリを Vercel に import（または `vercel` CLI でデプロイ）
-2. デプロイ後、`https://<your-project>.vercel.app/mcp` を Claude.ai / MCP クライアントに登録
+2. デプロイ後、Claude.ai の設定画面で自分のエンドポイント `https://<your-project>.vercel.app/mcp` を MCP サーバーとして登録
+
+> 末尾の `/mcp` を忘れないこと。`/` のみでは接続できません。
+
+> **ツール使用許可**: Claude.ai で初めてツールが呼ばれると「このツールの実行を許可しますか？」というダイアログが表示されます。**「Allow」をクリック**しないとツールが実行されず、「No approval received」「Denied」エラーになります。「Always allow」を選択すると以降の確認が不要になります。
 
 デプロイ時の注意点（リクエストボディの事前消費、`/mcp` パス、`/MCP` 大文字化対応など）は [docs/vercel-mcp-guide.md](docs/vercel-mcp-guide.md) を参照してください。
 
