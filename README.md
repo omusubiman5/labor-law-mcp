@@ -122,24 +122,29 @@ AI は即断しません。まず、
 
 ### セットアップ
 
-#### npx（推奨）
+本フォークは npm に公開していません。**ソースから clone して利用**するか、**自分で Vercel にデプロイ**してください。
 
-インストール不要。以下の設定をコピペするだけ:
+#### ローカル（ソースから）
+
+```bash
+git clone https://github.com/omusubiman5/labor-law-mcp.git
+cd labor-law-mcp
+npm install
+npm run build
+```
+
+**Claude Desktop** / **Claude Code** の設定に以下を追加:
 
 ```json
 {
   "mcpServers": {
     "labor-law": {
-      "command": "npx",
-      "args": ["-y", "labor-law-mcp"]
+      "command": "node",
+      "args": ["/path/to/labor-law-mcp/dist/index.js"]
     }
   }
 }
 ```
-
-**Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json` に追加
-
-**Claude Code**: `claude mcp add labor-law -- npx -y labor-law-mcp`
 
 #### セルフホスト（Vercel）＋ Claude.ai（Web）からリモート接続
 
@@ -153,26 +158,6 @@ AI は即断しません。まず、
 > **ツール使用許可**: Claude.ai で初めてツールが呼ばれると「このツールの実行を許可しますか？」というダイアログが表示されます。**「Allow」をクリック**しないとツールが実行されず、「No approval received」「Denied」エラーになります。「Always allow」を選択すると以降の確認が不要になります。
 
 デプロイ時の注意点（リクエストボディの事前消費、`/mcp` パス、`/MCP` 大文字化対応など）は [docs/vercel-mcp-guide.md](docs/vercel-mcp-guide.md) を参照してください。
-
-#### ローカル（ソースから）
-
-```bash
-git clone https://github.com/omusubiman5/labor-law-mcp.git
-cd labor-law-mcp
-npm install
-npm run build
-```
-
-```json
-{
-  "mcpServers": {
-    "labor-law": {
-      "command": "node",
-      "args": ["/path/to/labor-law-mcp/dist/index.js"]
-    }
-  }
-}
-```
 
 ### MCP ツール
 
