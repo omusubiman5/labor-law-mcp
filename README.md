@@ -159,9 +159,18 @@ npm run build
 
 デプロイ時の注意点（リクエストボディの事前消費、`/mcp` パス、`/MCP` 大文字化対応など）は [docs/vercel-mcp-guide.md](docs/vercel-mcp-guide.md) を参照してください。
 
-> **⚠️ 認証について**: 現状の `api/mcp.ts` は **認証なし（CORS 全開）** です。URL を知っていれば誰でもツールを呼び出せます。検証用には問題ありませんが、**再利用・再デプロイして実運用・共有する場合は認証の追加が必須**です。
->
-> Claude.ai のリモート MCP（カスタムコネクタ）は **OAuth 2.1（認可コード + PKCE）** に対応しています。Google 等を ID プロバイダにした OAuth フローを実装し、エンドポイントへのアクセスを認可済みユーザーに限定してください。
+リモート接続は OAuth 2.0 / PKCE + Auth0 認証で保護されます。Vercel には以下の環境変数を設定してください:
+
+```bash
+SERVER_URL=https://<your-project>.vercel.app
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=your-auth0-client-id
+AUTH0_CLIENT_SECRET=your-auth0-client-secret
+OAUTH_SECRET=your-random-long-secret
+ALLOWED_EMAILS=user@example.com
+```
+
+Auth0 の Allowed Callback URLs には `${SERVER_URL}/oauth/callback` を登録します。`ALLOWED_EMAILS` はカンマ区切りの許可メール一覧です。未設定の場合は Auth0 で認証済みのユーザー全員を許可します。
 
 ### MCP ツール
 
@@ -185,6 +194,7 @@ npm run build
 本プロジェクトは [kentaroajisaka/labor-law-mcp](https://github.com/kentaroajisaka/labor-law-mcp)（法令・厚労省通達・安衛通達の取得、ローカル接続のみ）のフォークです。本フォークでは主に次を追加しています。
 
 - **`https://` リモート MCP 接続** — Vercel Serverless 上に Streamable HTTP トランスポートでデプロイし、Claude.ai 等から `https://.../mcp` エンドポイント経由で利用できるようにしました（Vercel のリクエストボディ事前消費への対応など、サーバーレス特有の手当てが必要でした。詳細は [docs/vercel-mcp-guide.md](docs/vercel-mcp-guide.md)）。
+- **OAuth 認証** — Claude.ai のリモート MCP 接続向けに、Auth0 を ID プロバイダにした OAuth 2.0 / PKCE フローと Bearer トークン検証を追加。
 - **判例・裁判例・裁決の取得** — 裁判所判例DB・ハラスメント裁判例・労働保険審査会裁決・全基連判例の検索/取得ツールを追加。
 
 ### 出典

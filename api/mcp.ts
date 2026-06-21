@@ -7,24 +7,19 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from '../src/server.js';
-
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, mcp-session-id, Last-Event-ID, mcp-protocol-version',
-  'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version',
-};
+import { applyCorsHeaders, authenticateRequest } from './_lib/oauth.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // CORSヘッダーを設定
-  for (const [key, value] of Object.entries(CORS_HEADERS)) {
-    res.setHeader(key, value);
-  }
+  applyCorsHeaders(res);
 
   // CORS preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  if (!(await authenticateRequest(req, res))) {
     return;
   }
 
