@@ -7,7 +7,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from '../src/server.js';
-import { applyCorsHeaders, authenticateRequest } from './_lib/oauth.js';
+import { applyCorsHeaders } from './_lib/oauth.js';
 
 export const config = {
   maxDuration: 300,
@@ -20,10 +20,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
-    return;
-  }
-
-  if (!(await authenticateRequest(req, res))) {
     return;
   }
 
