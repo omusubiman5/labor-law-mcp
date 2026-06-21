@@ -9,6 +9,10 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from '../src/server.js';
 import { applyCorsHeaders, authenticateRequest } from './_lib/oauth.js';
 
+export const config = {
+  maxDuration: 300,
+};
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   applyCorsHeaders(res);
 
