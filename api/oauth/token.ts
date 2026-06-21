@@ -40,7 +40,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const codeChallengeMethod = String(payload.code_challenge_method ?? 'S256');
     const codeVerifier = body.code_verifier ?? '';
 
-    if (!verifyPKCE(codeVerifier, codeChallenge, codeChallengeMethod)) {
+    if (!(await verifyPKCE(codeVerifier, codeChallenge, codeChallengeMethod))) {
       sendJson(res, 400, { error: 'invalid_grant', error_description: 'PKCE verification failed' });
       return;
     }

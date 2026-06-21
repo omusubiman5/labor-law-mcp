@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
+import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_ALGORITHM = 'HS256';
 const textEncoder = new TextEncoder();
 
 export const corsHeaders: Record<string, string> = {
@@ -104,45 +104,15 @@ export function getHeader(req: IncomingMessage, name: string): string | undefine
 }
 
 export async function signInternalJwt(payload: Record<string, unknown>, expiresIn = '10m'): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: JWT_ALGORITHM, typ: 'JWT' };
-  const claims = {
-    ...payload,
-    iat: now,
-    exp: now + parseDurationSeconds(expiresIn),
-  };
-
-  const encodedHeader = base64UrlEncode(JSON.stringify(header));
-  const encodedPayload = base64UrlEncode(JSON.stringify(claims));
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const signature = signHmac(signingInput, getOAuthConfig().oauthSecret);
-
-  return `${signingInput}.${signature}`;
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(getSecret());
 }
 
 export async function verifyInternalJwt(token: string): Promise<Record<string, unknown>> {
-  const [encodedHeader, encodedPayload, signature, extra] = token.split('.');
-  if (!encodedHeader || !encodedPayload || !signature || extra !== undefined) {
-    throw new Error('Invalid JWT format');
-  }
-
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const expectedSignature = signHmac(signingInput, getOAuthConfig().oauthSecret);
-  if (!constantTimeEqual(signature, expectedSignature)) {
-    throw new Error('Invalid JWT signature');
-  }
-
-  const header = JSON.parse(base64UrlDecode(encodedHeader)) as { alg?: string };
-  if (header.alg !== JWT_ALGORITHM) {
-    throw new Error('Unsupported JWT algorithm');
-  }
-
-  const payload = JSON.parse(base64UrlDecode(encodedPayload)) as Record<string, unknown>;
-  const exp = payload.exp;
-  if (typeof exp !== 'number' || exp <= Math.floor(Date.now() / 1000)) {
-    throw new Error('JWT expired');
-  }
-
+  const { payload } = await jwtVerify(token, getSecret());
   return payload;
 }
 
@@ -154,10 +124,14 @@ export async function verifyAccessToken(token: string): Promise<Record<string, u
   return payload;
 }
 
-export function verifyPKCE(codeVerifier: string, codeChallenge: string, method: string): boolean {
+export async function verifyPKCE(codeVerifier: string, codeChallenge: string, method: string): Promise<boolean> {
   if (method === 'S256') {
-    const digest = createHash('sha256').update(textEncoder.encode(codeVerifier)).digest('base64url');
-    return digest === codeChallenge;
+    const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(codeVerifier));
+    const computed = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    return computed === codeChallenge;
   }
   return codeVerifier === codeChallenge;
 }
@@ -199,38 +173,6 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
 }
 
-function parseDurationSeconds(duration: string): number {
-  const match = /^(\d+)([smhd])$/.exec(duration);
-  if (!match) {
-    throw new Error(`Unsupported duration: ${duration}`);
-  }
-
-  const value = Number(match[1]);
-  const unit = match[2];
-  const multipliers: Record<string, number> = {
-    s: 1,
-    m: 60,
-    h: 60 * 60,
-    d: 60 * 60 * 24,
-  };
-
-  return value * multipliers[unit];
-}
-
-function base64UrlEncode(value: string): string {
-  return Buffer.from(value, 'utf8').toString('base64url');
-}
-
-function base64UrlDecode(value: string): string {
-  return Buffer.from(value, 'base64url').toString('utf8');
-}
-
-function signHmac(signingInput: string, secret: string): string {
-  return createHmac('sha256', secret).update(signingInput).digest('base64url');
-}
-
-function constantTimeEqual(left: string, right: string): boolean {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+function getSecret(): Uint8Array {
+  return textEncoder.encode(getOAuthConfig().oauthSecret);
 }
