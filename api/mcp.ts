@@ -7,7 +7,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from '../src/server.js';
-import { applyCorsHeaders } from './_lib/oauth.js';
+import { applyCorsHeaders } from './_lib/cors.js';
 
 export const config = {
   maxDuration: 300,
