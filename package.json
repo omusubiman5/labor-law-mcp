@@ -12,7 +12,9 @@
   ],
   "scripts": {
     "build": "tsc",
+    "build:http": "tsc -p tsconfig.http.json",
     "start": "node dist/index.js",
+    "start:http": "node dist-http/api/server.js",
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist-http",
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["src/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist", "dist-http", "tests"]
+}

@@ -8,6 +8,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from '../src/server.js';
 import { applyCorsHeaders } from './_lib/cors.js';
+import { authenticateRequest } from './_lib/oauth.js';
 
 export const config = {
   maxDuration: 300,
@@ -20,6 +21,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // OAuth 2.1 Bearer auth (self-hosted: required for all MCP requests)
+  if (!await authenticateRequest(req, res)) {
     return;
   }
 
