@@ -1,4 +1,54 @@
-# labor-law-mcp
+# labor-law-mcp — 本番稼働記録
+
+労働法・社会保険法 MCP サーバーの本番構成・検証結果の記録です。（2026-10-25 Vercel → Proxmox へ移行）
+
+## 稼働状況
+
+| 項目 | 結果 |
+| --- | --- |
+| 公開URL https://labor-law.osieteai.tokyo | ✅ 稼働中 |
+
+## 稼働仕様（実装・検証済み）
+
+| 項目 | 結果 |
+| --- | --- |
+| 未認証 /mcp ・ /api/mcp | ✅ 401 |
+| OAuthメタデータ | ✅ 200 |
+| /oauth/authorize → Auth0 | ✅ 正常遷移（gbiz 共用テナント） |
+| MCPツール（Bearer認証） | ✅ 12ツール・`get_law` で労働基準法32条の実取得確認 |
+| labor-law-mcp.service | ✅ active + enabled |
+| cloudflared.service | ✅ active + enabled |
+
+## 本番構成
+
+- **公開入口**: `https://labor-law.osieteai.tokyo` — Cloudflare Tunnel 経由（DNS CNAME = tunnel `labor-law-mcp`）
+- **稼働場所**: Proxmox VE ホスト `192.168.40.50` 上の LXC `104`（labor-law-mcp、`192.168.40.62`、Ubuntu 24.04 / Node 22）
+- **アプリ配置**: `/opt/labor-law-mcp`（systemd: `labor-law-mcp.service`、port `3000`）
+- **実行形態**: `node dist-http/api/server.js`（`api/server.ts` が node:http で api/ ハンドラを振分。Vercel Functions 依存を解消）
+- **トンネル**: `cloudflared.service`
+- **認証**: Auth0 `dev-m2y4tw2ss2itscjs.us.auth0.com`（gbiz-mcp 共用アプリ、OAuth 2.1 + PKCE、`ALLOWED_EMAILS` で制限）
+  - Vercel 版では無認証公開だった `/mcp` を OAuth 必須に是正（`authenticateRequest` 配線、commit `5f5dff6`）
+- **旧環境**: Vercel の `labor-law-mcp` プロジェクト（labor-law-mcp.vercel.app）。稼働中のデプロイは Proxmox のみ
+- `.env` 正本: `/opt/labor-law-mcp/.env`
+
+### セルフホスト起動
+
+```bash
+npm ci
+npm run build:http    # src/ + api/ → dist-http/ （npm run build は従来の stdio 版）
+npm run start:http    # http://localhost:3000
+```
+
+エンドポイント: `/mcp`・`/api/mcp`（MCP）、`/oauth/*`、`/.well-known/oauth-*`。
+
+## 運用メモ
+
+- コンテナ管理: `ssh root@192.168.40.50` → `pct exec 104 -- <cmd>`
+- `.env` 変更後は `systemctl restart labor-law-mcp`
+
+---
+
+# アプリケーション仕様（元 README）
 
 日本の労働法・社会保険・労災・安全衛生分野の一次情報へアクセスするための MCP サーバーです。
 
